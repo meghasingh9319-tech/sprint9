@@ -1,95 +1,62 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { getPopularMovies } from '@/lib/tmdb';
+import Hero from '@/components/Hero';
+import MovieGrid from '@/components/MovieGrid';
+import Link from 'next/link';
 
-export default function Home() {
+export const metadata = {
+  title: 'Home',
+  description: 'Discover the most popular movies currently trending.',
+};
+
+export default async function HomePage() {
+  let movies = [];
+  let heroMovie = null;
+  let error = null;
+
+  try {
+    const response = await getPopularMovies();
+    movies = response.results || [];
+    
+    if (movies.length > 0) {
+      const topMovies = movies.slice(0, 5);
+      heroMovie = topMovies[Math.floor(Math.random() * topMovies.length)];
+    }
+  } catch (err) {
+    error = err.message || 'Failed to load movies';
+    console.error('HomePage error:', err);
+  }
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <div>
+      {heroMovie && <Hero movie={heroMovie} />}
+      
+      <section className="container-custom py-10 md:py-15">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-2xl md:text-3xl font-bold">
+            Popular Movies
+          </h2>
+          <Link href="/search" className="btn-secondary text-sm px-4 py-2">
+            View All
+          </Link>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        
+        {error ? (
+          <div className="p-10 bg-red-500/10 rounded-xl border border-red-500/30 text-center">
+            <p className="text-red-400 mb-3">⚠️ {error}</p>
+            <p className="text-text-secondary text-sm">
+              Please try refreshing the page or check your API key.
+            </p>
+          </div>
+        ) : movies.length > 0 ? (
+          <MovieGrid movies={movies} />
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-lg text-text-secondary">
+              No movies available at the moment.
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
